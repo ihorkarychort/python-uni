@@ -14,7 +14,6 @@ class LLMClient:
 
         try:
             response = self.client.chat.completions.create(
-                # АКТУАЛЬНА МОДЕЛЬ: Llama 3.3 70B Versatile
                 model="llama-3.3-70b-versatile", 
                 messages=messages,
                 response_format={"type": "json_object"},

@@ -1,10 +1,6 @@
 import json
 
 def get_system_prompt(menu_data: dict) -> str:
-    """
-    Generates the system prompt containing the menu and strict instruction
-    on how to process orders into JSON format.
-    """
     menu_str = json.dumps(menu_data, indent=2)
 
     return f"""

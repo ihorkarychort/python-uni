@@ -17,7 +17,6 @@ class ChatEngine:
         self.system_prompt = get_system_prompt(full_menu)
         self.history = []
         
-        # State for upsells (щоб не пропонувати одне й те саме двічі)
         self.upsell_state = {
             "combo_offered": False,
             "sauce_offered": False,
@@ -33,17 +32,14 @@ class ChatEngine:
         has_burger = any(i["type"] == "item" and "burger" in i.get("name", "").lower() for i in new_items)
         has_combo = any(i["type"] == "combo" or i["type"] == "deal" for i in new_items)
         
-        # 1. Burger -> Offer Combo (якщо це не комбо)
         if has_burger and not has_combo and not self.upsell_state["combo_offered"]:
             upsell_msg = " Would you like to make that a meal?"
             self.upsell_state["combo_offered"] = True
-            
-        # 2. Combo -> Offer Sauce
+      
         elif has_combo and not self.upsell_state["sauce_offered"]:
             upsell_msg = " Would you like to add some dipping sauces?"
             self.upsell_state["sauce_offered"] = True
-            
-        # 3. Any Order -> Offer Dessert (один раз на замовлення)
+        
         elif (has_burger or has_combo) and not self.upsell_state["dessert_offered"]:
             upsell_msg = " How about a McFlurry or Apple Pie for dessert?"
             self.upsell_state["dessert_offered"] = True
@@ -64,15 +60,12 @@ class ChatEngine:
             message = llm_response.get("message_to_user", "")
             items = llm_response.get("items", [])
 
-            # Handle Finish
             if action == "finish":
                 self.order.show()
                 print(f"System: Your order total is ${self.order.total():.2f}")
                 break
 
-            # Handle Clarify
             if action == "clarify":
-                # Fallback: якщо LLM повернула пусте повідомлення
                 if not message:
                     message = "Could you please clarify your order?"
                 
@@ -80,7 +73,6 @@ class ChatEngine:
                 self.history.append({"role": "assistant", "content": message})
                 continue
 
-            # Handle Add to Order
             if action == "add_to_order":
                 all_valid = True
                 validation_errors = []
@@ -99,7 +91,6 @@ class ChatEngine:
                     self.history.append({"role": "assistant", "content": error_resp})
                     continue
 
-                # Add to State
                 added_items_objs = []
                 for item in items:
                     entry = item["_entry_ref"]
@@ -116,7 +107,6 @@ class ChatEngine:
                         added_ingr.append((add_name, p))
                     removed_ingr = mods.get("remove", [])
 
-                    # Combo items handling (mocked for simplicity)
                     components = {}
                     if "slots" in entry:
                          combo_d = item.get("combo_details", {})
@@ -135,10 +125,9 @@ class ChatEngine:
                     self.order.add_item(order_item)
                     added_items_objs.append(order_item)
 
-                # Generate Upsell
-                upsell_text = self._generate_upsell(added_items_objs)
                 
-                # Combine LLM message with Upsell
+                upsell_text = self._generate_upsell(added_items_objs)
+               
                 final_response = f"{message}{upsell_text}"
                 print(f"System: {final_response}")
                 self.history.append({"role": "assistant", "content": final_response})

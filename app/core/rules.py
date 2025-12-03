@@ -1,6 +1,4 @@
 import re
-
-# --- virtual items helpers (як було) ---
 def is_virtual(item):
     try:
         return getattr(item, "is_virtual", False) or (isinstance(item, dict) and item.get("virtual", False))
@@ -37,8 +35,6 @@ def resolve_virtual_item(item, available_items):
         return entry
     return {"name": possible[choice], "price": 0.0}
 
-
-# --- size modifiers ---
 SIZE_PRICE_MODIFIERS = {"small": -0.50, "medium": 0.0, "large": 1.0}
 
 def detect_size(user_text: str) -> str | None:
@@ -60,15 +56,8 @@ def apply_size_price(base_price: float, size: str | None) -> float:
         return float(base_price or 0.0)
 
 
-# --- ingredient parsing helpers ---
 def parse_ingredient_list(user_input: str):
-    """
-    Проста утиліта: з рядка типу "no onion, no pickles" або "remove onion, add bacon"
-    повертає два списки: (to_remove, to_add) — імена в lower-case, очищені.
-    Ми допускаємо коми і 'and'.
-    """
     s = user_input.lower()
-    # split by comma or ' and '
     parts = re.split(r',|\band\b', s)
     to_remove = []
     to_add = []
@@ -76,25 +65,20 @@ def parse_ingredient_list(user_input: str):
         p = p.strip()
         if not p:
             continue
-        # patterns: "no X", "without X", "remove X", "minus X"
         m = re.match(r'^(no|without|remove|minus)\s+(.+)$', p)
         if m:
             name = m.group(2).strip()
             to_remove.append(name)
             continue
-        # patterns: "add X", "with X", "extra X"
         m2 = re.match(r'^(add|with|extra|plus)\s+(.+)$', p)
         if m2:
             name = m2.group(2).strip()
             to_add.append(name)
             continue
-        # if none matched, guess: treat as add if starts with 'extra' token else remove if starts with 'no'
-        # default: try both heuristics: if starts with any negation -> remove else add
         if p.startswith('no ') or p.startswith('without ') or p.startswith('remove '):
             to_remove.append(re.sub(r'^(no|without|remove|minus)\s+', '', p).strip())
         else:
             to_add.append(p.strip())
-    # normalize whitespace
     to_remove = [ri.strip() for ri in to_remove if ri.strip()]
     to_add = [ai.strip() for ai in to_add if ai.strip()]
     return to_remove, to_add
