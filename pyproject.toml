@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "mcdonalds-ai-simulator"
+version = "0.1.0"
+description = "AI-powered McDonald's ordering simulator"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+packages = [{include = "app"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.0"
+uvicorn = "^0.32.0"
+openai = "^1.55.0"
+pydantic = "^2.9.0"
+pydantic-settings = "^2.6.0"
+python-dotenv = "^1.0.1"
+httpx = "^0.27.0"
+aioconsole = "^0.7.0"
+pyyaml = "^6.0.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+black = "^24.10.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,31 +1,30 @@
-import os
-import json
-from openai import OpenAI
+from openai import AsyncOpenAI
+from app.config import settings 
+from app.core.models import LLMResponse
 
 class LLMClient:
     def __init__(self):
-        self.client = OpenAI(
-            api_key=os.getenv("GROQ_API_KEY"), 
-            base_url="https://api.groq.com/openai/v1"
+        self.client = AsyncOpenAI(
+            api_key=settings.GROQ_API_KEY or settings.OPENAI_API_KEY,
+            base_url=settings.LLM_BASE_URL
         )
 
-    def process_user_message(self, history: list, system_prompt: str):
+    async def process_user_message(self, history: list, system_prompt: str) -> LLMResponse:
         messages = [{"role": "system", "content": system_prompt}] + history
 
         try:
-            response = self.client.chat.completions.create(
-                model="llama-3.3-70b-versatile", 
+            response = await self.client.chat.completions.create(
+                model=settings.LLM_MODEL,
                 messages=messages,
                 response_format={"type": "json_object"},
                 temperature=0.0
             )
             
             content = response.choices[0].message.content
-            return json.loads(content)
+            return LLMResponse.model_validate_json(content)
         except Exception as e:
             print(f"LLM Error: {e}")
-            return {
-                "action": "clarify", 
-                "items": [], 
-                "message_to_user": "I am having trouble connecting to the brain. Please try again."
-            }
+            return LLMResponse(
+                action="clarify",
+                message_to_user="I am having trouble connecting to the brain. Please try again."
+            )

@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  server:
+    build: .
+    container_name: mcdonalds_server
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      # Передаємо ключі з вашого локального .env файлу
+    env_file:
+      - app/.env
+    volumes:
+      # Монтуємо код, щоб зміни застосовувалися без перебудови (для розробки)
+      - ./app:/app/app
+      - ./data:/app/data
+    restart: unless-stopped
+
+  # Клієнт можна запустити окремим контейнером, але для CLI зручніше запускати локально.
+  # Якщо все ж хочете через докер:
+  # client:
+  #   build: .
+  #   command: python -m app.client_app
+  #   environment:
+  #     - HOST=server 
+  #   depends_on:
+  #     - server
+  #   stdin_open: true # Дозволяє інтерактивність
+  #   tty: true
